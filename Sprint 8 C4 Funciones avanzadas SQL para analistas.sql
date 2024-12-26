@@ -195,3 +195,136 @@ name_store	name_uniq_cnt
 Four	32
 Uncle Joes Store	50
 Milk Market	51
+
+Operadores y funciones para trabajar con fechas
+SELECT 
+    EXTRACT (HOUR FROM date) AS hours
+FROM
+    transactions;
+
+SELECT 
+    EXTRACT (HOUR from date) AS hours,
+    COUNT(id_product) AS cnt
+FROM
+    transactions
+GROUP BY
+    hours
+ORDER BY
+    hours;
+
+    SELECT 
+    EXTRACT(DAY from date) AS days,
+    COUNT(id_product) AS cnt
+FROM
+    transactions
+GROUP by
+    days
+ORDER BY
+    days;
+
+    SELECT
+    DATE_TRUNC('day', date) AS date_month,
+    COUNT(id_product) AS cnt
+FROM
+    transactions
+GROUP by
+    date_month
+ORDER by
+    date_month;
+
+    SELECT 
+    id_product
+FROM 
+	products_data_all
+where (category = 'milk'
+    AND price > 17) 
+    OR (category = 'butter' AND price > 9);
+
+id_product
+97
+97
+97
+97
+97
+97
+171
+97
+
+SELECT DISTINCT
+    user_id
+FROM 
+	transactions
+WHERE 
+    id_product in
+	(SELECT 
+	id_product 
+	FROM 
+	products_data_all
+	WHERE 
+	(category='milk' AND  price > 17) OR 
+	(category='butter' AND price > 9));
+    Resultado
+user_id
+350
+874
+940
+815
+508
+366
+823
+
+SELECT
+    DATE_TRUNC('day', date) AS trunc_date,
+    COUNT(DISTINCT id_transaction) AS transactions_per_day
+FROM
+	transactions
+GROUP by
+    trunc_date;
+
+    Resultado
+trunc_date	transactions_per_day
+2019-06-01 00:00:00	330
+2019-06-02 00:00:00	375
+2019-06-03 00:00:00	341
+2019-06-04 00:00:00	358
+
+SELECT 
+   EXTRACT(WEEK FROM SUBQ.trunc_date) AS week_number,
+    AVG(SUBQ.transactions_per_day) AS avg_week_transaction
+FROM
+	(SELECT
+        COUNT(DISTINCT id_transaction) AS transactions_per_day,
+        DATE_TRUNC('day', date) AS trunc_date
+    FROM
+        transactions
+	GROUP BY
+        trunc_date) AS SUBQ
+GROUP by
+    week_number;
+    Resultado
+week_number	avg_week_transaction
+
+Resultado
+23	332.429
+26	323
+24	330
+22	352.5
+27	348
+25	324.571
+
+SELECT
+    name AS product_name,
+    name_store AS store_name,
+    category AS category,
+    price AS product_price,
+    price / AVG(price) OVER (PARTITION BY category, name_store) AS product_mul
+FROM
+    products_data_all
+ORDER BY
+    id_product;
+
+    roduct_name	store_name	category	product_price	product_mul
+a2 Milk Whole Milk, 59 oz	Uncle Joe's Store	milk	3.56	1.01888
+a2 Milk Whole Milk, 59 oz	T-E-B	milk	3.45	1.02882
+a2 Milk Whole Milk, 59 oz	Uncle Joe's Store	milk	3.43	0.981675
+a2 Milk Whole Milk, 59 oz	Uncle Joe's Store	milk	3.39	0.970227
