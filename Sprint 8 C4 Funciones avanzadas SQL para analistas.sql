@@ -324,7 +324,82 @@ ORDER BY
     id_product;
 
     roduct_name	store_name	category	product_price	product_mul
-a2 Milk Whole Milk, 59 oz	Uncle Joe's Store	milk	3.56	1.01888
+a2 Milk Whole Milk, 59 oz	Uncle Joes Store	milk	3.56	1.01888
 a2 Milk Whole Milk, 59 oz	T-E-B	milk	3.45	1.02882
-a2 Milk Whole Milk, 59 oz	Uncle Joe's Store	milk	3.43	0.981675
-a2 Milk Whole Milk, 59 oz	Uncle Joe's Store	milk	3.39	0.970227
+a2 Milk Whole Milk, 59 oz	Uncle Joes Store	milk	3.43	0.981675
+a2 Milk Whole Milk, 59 oz	Uncle Joes Store	milk	3.39	0.970227
+
+SELECT distinct
+    name_store AS store_name,
+    date_upd::date AS sale_date,
+    category AS category,
+    SUM(price) OVER (
+    PARTITION by
+        name_store, category, date_upd
+    ) * 100 / SUM(price) OVER (
+        PARTITION by
+            name_store, date_upd
+    ) AS percent
+FROM
+    products_data_all
+WHERE
+    date_upd::date BETWEEN '2019-06-01'
+    AND '2019-06-06'
+ORDER by
+    date_upd::date,
+    name_store;
+
+    store_name	sale_date	category	percent
+Four	2019-06-01	butter	16.7999
+Four	2019-06-01	milk	83.2001
+
+SELECT 
+    name_store AS store_name,
+    category AS category,
+    name AS product_name,
+    price,
+    SUM(price) OVER (
+        PARTITION BY 
+            category
+        ORDER by
+            id_product
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS category_accum,
+    SUM(price) OVER (
+        ORDER by
+            id_product
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS store_accum
+FROM
+    products_data_all
+where
+    date_upd = '2019-06-02'
+    AND name_store = 'Four'
+ORDER BY
+    id_product;
+
+    Resultado
+store_name	category	product_name	price	category_accum	store_accum
+Four	milk	Borden Super Chox Chocolate Drink, 1 gal	2.38	2.38	2.38
+Four	milk	Fairlife 2% Chocolate Reduced Fat Milk, 52 oz	3.16	5.54	5.54
+Four	milk	Мoo-Moo Select Ingredients Fat Free Milk, 1 gal	2.28	7.82	7.82
+
+SELECT DISTINCT
+    name_store AS store_name,
+    category AS category,
+    date_upd:: AS sale_date
+    name,
+    price,
+    RANK() OVER (PARTITION BY name_store,category ORDER BY price) AS rank,
+FROM
+    products_data_all
+where
+    date_upd::date = '2019-06-02'
+ORDER by
+    store_name,
+    category,
+    rank;
+
+    Resultado
+store_name	category	sale_date	name	price	rank
+Four	butter	2019-06-02	Land O Lakes Honey Butter Spread, 6.5 oz	1.87	1
+Four	butter	2019-06-02	Pillsbury Butter Flake Crescent Dinner Rolls, 8 ct	1.97	2
+Four	butter	2019-06-02	Nabisco Ritz Peanut Butter Cracker Sandwiches, 8 ct	2.86	3
