@@ -588,3 +588,168 @@ amount	total	id_transaction
 
 UNIR DECLARACIONES
 
+1.Escribe una consulta para seleccionar los nombres de todos los productos que se compraron al menos una vez el 1 de junio de 2019.
+En la consulta externa, selecciona los nombres de productos (name) de la tabla products. Utiliza el comando DISTINCT para evitar duplicados. Guarda los resultados en el campo name.
+Une products con la tabla subq, que contiene los ID de productos tramitados el 1 de junio de 2019, utilizando LEFT JOIN en el campo id_product.
+En la subconsulta (subq), selecciona id_product de la tabla transactions.
+Para obtener id_product para el 1 de junio deberás convertir la columna transactions.date al tipo de fecha utilizando CAST.
+
+SELECT DISTINCT
+    products.name AS name
+from
+    products
+    LEFT JOIN (
+        SELECT
+            id_product
+        FROM
+            transactions
+        WHERE
+            CAST(transactions.date AS date) = '2019-06-01'
+) AS subq ON products.id_product = subq.id_product
+WHERE
+    subq.id_product IS NOT NULL;
+
+Resultado
+name
+a2 Milk 2% Reduced Fat Milk, 59 oz
+a2 Milk Whole Milk, 59 oz
+A Taste of Thai Lite Coconut Milk, 13.5 oz
+A Taste of Thai Unsweetened Coconut Milk, 13.5 oz
+
+2.Escribe una consulta para seleccionar los nombres de todos los productos que se compraron al menos una vez el 8 de junio de 2019.
+En la consulta externa, selecciona los nombres de productos (name) de la tabla products. Utiliza el comando DISTINCT para evitar duplicados. Guarda los resultados en el campo name.
+Une products con la tabla subq con LEFT JOIN por el campo id_product.
+En la subconsulta (subq), selecciona id_product de la tabla transactions.
+Para obtener id_product para el 8 de junio, deberás convertir la columna transactions.date al tipo de fecha utilizando CAST.
+
+SELECT DISTINCT
+    products.name AS name
+    from
+    products
+    LEFT JOIN (
+        SELECT
+    		id_product
+        FROM
+		transactions 
+        WHERE
+		CAST(transactions.date AS date) = '2019-06-08'
+            ) AS subq ON products.id_product = subq.id_product
+WHERE
+    subq.id_product IS NOT NULL;
+
+Resultado
+name
+a2 Milk 2% Reduced Fat Milk, 59 oz
+a2 Milk Whole Milk, 59 oz
+A Taste of Thai Lite Coconut Milk, 13.5 oz
+A Taste of Thai Unsweetened Coconut Milk, 13.5 oz
+
+
+3.Une los datos obtenidos de las consultas anteriores en una selección sin que se dupliquen los valores name.
+SELECT DISTINCT
+    products.name AS name
+FROM
+    products
+    LEFT JOIN (
+        SELECT
+            id_product
+        FROM
+            transactions
+        WHERE
+            CAST(transactions.date AS date) = '2019-06-01') AS SUBQ1 ON products.id_product = SUBQ1.id_product
+WHERE
+    SUBQ1.id_product IS NOT NULL
+UNION
+SELECT DISTINCT
+    products.name AS name
+FROM
+    products
+    LEFT JOIN (
+        SELECT
+            id_product
+        FROM
+            transactions
+        WHERE
+            CAST(transactions.date AS date) = '2019-06-08') AS SUBQ2 ON products.id_product = SUBQ2.id_product
+WHERE
+    SUBQ2.id_product IS NOT NULL;
+
+Resultado
+name
+Nabisco Ritz Peanut Butter Cracker Sandwiches, 8 ct
+Goya Coconut Milk, 13.5 oz
+Central Market Organics Whole Milk, 1 gal
+Nesquik Chocolate Low Fat Milk, 14 oz
+
+4.Convierte la consulta de la tarea anterior en una subconsulta y llámala UBQ. Pasa name desde SUBQ a la consulta externa y encuentra la longitud de la lista de productos resultante (es decir, el número de productos diferentes vendidos el 1 y el 8 de junio).
+SELECT
+    COUNT(SUBQ.name)
+FROM ( SELECT DISTINCT
+        products.name AS name
+    FROM
+        products
+    LEFT JOIN (
+        SELECT
+            id_product
+        FROM
+            transactions
+        WHERE
+            CAST(transactions.date AS date) = '2019-06-01') AS SUBQ1 ON products.id_product = SUBQ1.id_product
+    WHERE
+        SUBQ1.id_product IS NOT NULL
+    UNION
+    SELECT DISTINCT
+        products.name AS name
+    FROM
+        products
+    LEFT JOIN (
+        SELECT
+            id_product
+        FROM
+            transactions
+        WHERE
+            CAST(transactions.date AS date) = '2019-06-08') AS SUBQ2 ON products.id_product = SUBQ2.id_product
+    WHERE
+        SUBQ2.id_product IS NOT NULL) AS SUBQ;
+
+Resultado
+count
+192
+
+5.Fusiona las consultas de los bloques anteriores con UNION ALL y conviértela en una subconsulta con el nombre SUBQ.
+Pasa name desde SUBQ a la consulta externa y encuentra el número total de productos. Nota cómo cambia el número debido a los duplicados.
+
+select
+    COUNT(SUBQ.name)
+FROM(SELECT DISTINCT
+        products.name AS name
+    FROM
+        products
+    LEFT JOIN (
+        SELECT
+            id_product
+        FROM
+            transactions
+        WHERE
+            CAST(transactions.date AS date) = '2019-06-01') AS SUBQ1 ON products.id_product = SUBQ1.id_product
+    WHERE
+        SUBQ1.id_product IS NOT NULL
+UNION ALL
+        SELECT DISTINCT
+            products.name AS name
+        FROM
+            products
+        LEFT JOIN (
+            SELECT
+                id_product
+            FROM
+                transactions
+            WHERE
+                CAST(transactions.date AS date) = '2019-06-08') AS SUBQ2 ON products.id_product = SUBQ2.id_product
+        WHERE
+            SUBQ2.id_product IS NOT NULL)AS SUBQ;
+
+Resultado
+count
+375
+
